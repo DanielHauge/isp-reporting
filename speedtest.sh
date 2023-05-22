@@ -2,7 +2,7 @@
 
 echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Speedtesting" >> /reports/log.txt
 
-json=$(echo "YES" | speedtest --accept-gdpr --accept-license -f csv)
+csv=$(echo "YES" | speedtest --accept-gdpr --accept-license -f csv)
 # timestamp epoch,timestamp pretty,server name,server id,idle latency,idle jitter,packet lossdownload,upload,download bytes,upload bytes,share url,download server count,download latency,download latency jitter,download latency low,download latency high,upload latency,upload latency jitter,upload latency low,upload latency high,idle latency low,idle latency high
 timestampD=$(date '+%d')
 timestampM=$(date '+%m')
@@ -10,14 +10,18 @@ timestampY=$(date '+%Y')
 timestampS=$(date "+%s")
 timestampPretty=$(date "+%Y-%m-%d %H:%M:%S")
 mkdir -p "/reports/$timestampY/$timestampM"
-echo "\"$timestampS\",\"$timestampPretty\",$json" >> "/reports/$timestampY/$timestampM/$timestampD.csv"
+if [[ -n "$csv" ]]; then
+    echo "\"$timestampS\",\"$timestampPretty\",$csv" >> "/reports/$timestampY/$timestampM/$timestampD.csv"
+else
+    echo "  " >> "/reports/$timestampY/$timestampM/$timestampD.csv"
+fi
 
 
 echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Generating plots" >> /reports/log.txt
 # For each month
 for M in /reports/*/*
 do 
-    echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Generating plot for: $M" >> /reports/log.txt
+    echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Evaluation of: $M" >> /reports/log.txt
 
     # Continue if not directory.
     if [ ! -d "$M" ]; then
@@ -37,8 +41,8 @@ do
             lastGenerated=$(date -r "$M"/"$day"-speed.svg '+%s')
         fi
         length=${#D}
-        end=$((length - 4 - 8 - 3))
-        yearMonth=${D:8:$end}
+        end=$((length - 4 - 8 - 4))
+        yearMonth=${D:9:$end}
         yearMonth=${yearMonth/\//-}
         nextDay=$((day+1))
         from="$yearMonth-$day"
@@ -46,7 +50,7 @@ do
         lastModified=$(date -r "$D" '+%s')
         if [[ $lastModified -gt $lastGenerated ]]; then
             # Generate plots
-            echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Generating plot for: $D" >> /reports/log.txt
+            echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Generate day plot with range: $from - $to" >> /reports/log.txt
 
             rm -f "$M"/"$day"-speed.svg
             gnuplot -p -e "file='/$D';out='$M/$day-speed.svg';from='$from';to='$to';timeTicks=3600" /speed.gnuplot
@@ -70,10 +74,12 @@ do
         # Generate plots
         length=${#M}
         end=$((length-8))
-        yearMonth=${M:8:$end}
+        yearMonth=${M:9:$end}
         yearMonth=${yearMonth/\//-}
         from="$yearMonth-01"
         to="$yearMonth-32" # 32 is a largest value a date for a month can have 
+        echo "$(date +"%Y-%m-%dT%H:%M:%SZ") | Generate month plot with range: $from - $to" >> /reports/log.txt
+
         gnuplot -p -e "file='/$M.csv';out='$M-speed.svg';from='$from';to='$to';timeTicks=86400" /speed.gnuplot
         gnuplot -p -e "file='/$M.csv';out='$M-stability.svg';from='$from';to='$to';timeTicks=86400" /stability.gnuplot
     fi
