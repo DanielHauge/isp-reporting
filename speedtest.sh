@@ -44,7 +44,8 @@ do
         end=$((length - 4 - 8 - 4))
         yearMonth=${D:9:$end}
         yearMonth=${yearMonth/\//-}
-        nextDay=$((day+1))
+        nextDayUnpad=$(expr "$day" + 1)
+        nextDay=$(printf "%02d" "$nextDayUnpad")
         from="$yearMonth-$day"
         to="$yearMonth-$nextDay"
         lastModified=$(date -r "$D" '+%s')
