@@ -1,4 +1,4 @@
-# internet-isp-reporting
+# isp-reporting
 
 Have you ever been throttled by your ISP, perhaps paying for 1000 mbit/s, but only get 50-100 mbit/s without knowing?
 If yes, you've come to the right place, as this program can collect data and generate reports of ping and bandwidth provided by ISP. Uses ookla's speedtest as foundation for evaluation.
